@@ -1,0 +1,38 @@
+name: schedule
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '*/30 * * * *'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        version_branch:
+          - foo
+          - bar
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ matrix.version_branch }}
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+
+    - name: Run ruby code
+      run: bundle exec rake make_commit
